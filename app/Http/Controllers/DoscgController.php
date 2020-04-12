@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 // Create a new controller and Model called “DOSCG”
 class DoscgController extends Controller
@@ -48,5 +50,60 @@ class DoscgController extends Controller
 
         $c = -21 - $a;
         return $c;
+    }
+
+    // Send Data Final Step from dialog flow to our system.
+    public function webhook () {
+
+        $json = file_get_contents('php://input');
+
+        Log::info($json);
+
+        $update_response = file_get_contents("php://input");
+        $update = json_decode($update_response, true);
+        if (isset($update["queryResult"]["action"]) && $update["queryResult"]["action"] ==  "home.final-question") {
+            $this->processMessage($update);
+
+        } else {
+            $this->sendMessage(array(
+                "source" => $update["responseId"],
+                "fulfillmentText" => "Hello from Nut",
+                "payload" => array(
+                    "items" => [
+                        array(
+                            "simpleResponse" =>
+                                array(
+                                    "textToSpeech" => "Bad request"
+                                )
+                        )
+                    ],
+                ),
+
+            ));
+        }
+    }
+
+    // Send Data Final Step from dialog flow to our system.
+    function processMessage($update)
+    {
+        $home_type = $update["queryResult"]["parameters"]["home_type"];
+        $budget = $update["queryResult"]["parameters"]["budget"];
+        $phone_number = $update["queryResult"]["parameters"]["phone_number"];
+        $email = $update["queryResult"]["parameters"]["email"];
+        $name = $update["queryResult"]["parameters"]["name"];
+
+        DB::table('leads')->create([
+            'home_type' => $home_type,
+            'budget' => $budget,
+            'phone_number' => $phone_number,
+            'email' => $email,
+            'name' => $name
+        ]);
+
+    }
+
+    function sendMessage($parameters)
+    {
+        echo json_encode($parameters);
     }
 }

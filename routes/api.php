@@ -17,6 +17,10 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/findXYZ/{param}', 'DoscgController@findXYZ');
-Route::get('/findBC', 'DoscgController@findBC');
+Route::get('/', function () {
+    return 'API Working!';
+});
+Route::get('/FindXYZ/{param}', 'DoscgController@findXYZ');
+Route::get('/FindBC', 'DoscgController@findBC');
+Route::post('/Webhook', 'DoscgController@webhook');
 
